@@ -14,7 +14,7 @@
 
 (defsystem xlsx
   :version "0.2"
-  :author "Carlos Ungil" "Akihide Nano"
+  :author "Carlos Ungil, Akihide Nano"
   :license "MIT license"
   :depends-on (:zip
                :babel
