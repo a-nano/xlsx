@@ -13,8 +13,8 @@
 (in-package :xlsx-asd)
 
 (defsystem xlsx
-  :version "0.1"
-  :author "Carlos Ungil"
+  :version "0.2"
+  :author "Carlos Ungil" "Akihide Nano"
   :license "MIT license"
   :depends-on (:zip
                :babel

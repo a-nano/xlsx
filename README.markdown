@@ -1,6 +1,7 @@
 # xlsx
 Carlos Ungil's Basic reader for Excel files.
 Modified to Japanese version.
+Added function as-alist.
 
 Original  [https://gitlab.common-lisp.net/cungil/xlsx](https://gitlab.common-lisp.net/cungil/xlsx)
 
@@ -18,6 +19,9 @@ Original  [https://gitlab.common-lisp.net/cungil/xlsx](https://gitlab.common-lis
 ;-> #2A((82 "日本語の確認１") (41 NIL))
 ;-> (:A :B)
 ;-> (1 2)
+
+(xlsx:as-alist (xlsx:read-sheet "test.xlsx" "Sheet1"))
+;-> ((:A1 . 82) (:B1 . "日本語の確認１") (A2 . 41))
 
 ```
 
@@ -37,7 +41,9 @@ Start your lisp. Then, just:
 
 ## Author
 
-* Carlos Ungil
+* Carlos Ungil (original)
+
+* Akihide Nano (modified)
 
 ## Copyright
 

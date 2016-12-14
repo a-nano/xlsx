@@ -3,7 +3,8 @@
   (:use #:cl)
   (:export #:list-sheets
            #:read-sheet
-           #:ask-matrix))
+           #:ask-matrix
+           #:as-alist))
 (in-package :xlsx)
 
 (defun list-entries (file)
@@ -115,4 +116,11 @@ Empty columns or rows are ignored (column and row names are returned as addition
        do (setf (aref output (the fixnum (position row rows)) (the fixnum (position col cols))) val))
     (values output cols rows)))
 
-
+(defun as-alist (xlsx)
+  "Creates an a-list from a list of cells of the form ((:A . 1) .42)"
+  (mapcar #'(lambda (lst)
+              (cons (intern (concatenate 'string
+                                         (symbol-name (caar lst))
+                                         (write-to-string (cdar lst))) :keyword)
+                    (cdr lst)))
+          xlsx))    
