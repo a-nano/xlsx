@@ -127,6 +127,7 @@ Empty columns or rows are ignored (column and row names are returned as addition
           xlsx))    
 
 (defun as-plist (xlsx)
+    "Creates a p-list from a list of cells of the form (:A1 42 :B1 21)"
   (mapcan #'(lambda (lst)
               (cons (intern (concatenate 'string
                                          (symbol-name (caar lst))
