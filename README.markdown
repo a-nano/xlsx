@@ -23,6 +23,9 @@ Original  [https://gitlab.common-lisp.net/cungil/xlsx](https://gitlab.common-lis
 (xlsx:as-alist (xlsx:read-sheet "test.xlsx" "Sheet1"))
 ;-> ((:A1 . 82) (:B1 . "日本語の確認１") (:A2 . 41))
 
+(xlsx:as-plist (xlsx:read-sheet "test.xlsx" "Sheet1"))
+;-> (:A1 82 :B2 "日本語の確認１" :A2 41)
+
 ```
 
 
