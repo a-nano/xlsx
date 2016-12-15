@@ -1,7 +1,7 @@
 # xlsx
 Carlos Ungil's Basic reader for Excel files.
 Modified to Japanese version.
-Added function as-alist.
+Added function as-alist and as-plist.
 
 Original  [https://gitlab.common-lisp.net/cungil/xlsx](https://gitlab.common-lisp.net/cungil/xlsx)
 
