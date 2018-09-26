@@ -1,16 +1,8 @@
-(in-package :cl-user)
-(defpackage :xlsx
-  (:use #:cl)
-  (:export #:list-sheets
-           #:read-sheet
-           #:ask-matrix
-           #:as-alist
-           #:as-plist))
-(in-package :xlsx)
+(in-package #:xlsx)
 
 (defun list-entries (file)
   (zip:with-zipfile (zip file)
-                    (loop for k being the hash-keys of (zip:zipfile-entries zip) collect k)))
+    (loop for k being the hash-keys of (zip:zipfile-entries zip) collect k)))
 
 (defun get-entry (name zip)
   (let ((entry (zip:get-zipfile-entry name zip)))
@@ -20,18 +12,17 @@
   (loop for rel in (xmls:xmlrep-find-child-tags 
 		    :relationship (get-entry "xl/_rels/workbook.xml.rels" zip))
      collect (cons (xmls:xmlrep-attrib-value "Id" rel)
-                   (xmls:xmlrep-attrib-value "Target" rel))))
+		   (xmls:xmlrep-attrib-value "Target" rel))))
 
 (defun get-unique-strings (zip)
   (loop for str in (xmls:xmlrep-find-child-tags :si (get-entry "xl/sharedStrings.xml" zip))
-	for x = (xmls:xmlrep-find-child-tag :t str)
-	collect (cond ((equal (second x) '(("space" "preserve"))) " ")
-		      ((xmls:xmlrep-children x) (xmls:xmlrep-string-child x)))))
+     for x = (xmls:xmlrep-find-child-tag :t str)
+     collect (xmls:xmlrep-string-child x)))
 
 (defun get-number-formats (zip)
   (let ((format-codes (loop for fmt in (xmls:xmlrep-find-child-tags
 					:numFmt (xmls:xmlrep-find-child-tag
-						 :numFmts (get-entry "xl/styles.xml" zip) nil))
+						 :numFmts (get-entry "xl/styles.xml" zip) (xmls:make-node)))
 			 collect (cons (parse-integer (xmls:xmlrep-attrib-value "numFmtId" fmt))
 				       (xmls:xmlrep-attrib-value "formatCode" fmt)))))
     (loop for style in (xmls:xmlrep-find-child-tags
@@ -86,7 +77,7 @@ A numeric id or name is required unless the file contains a single worksheet."
 			      :sheetData (get-entry (format nil "xl/~A" entry-name) zip)))
 	 with unique-strings = (get-unique-strings zip)
 	 with number-formats = (get-number-formats zip)
-	 append (loop for c in (rest (rest row))
+	 append (loop for c in (xmls:xmlrep-children row)
 		   for col-row = (column-and-row (xmls:xmlrep-attrib-value "r" c))
 		   for value = (xmls:xmlrep-find-child-tag :v c nil)
 		   for type = (xmls:xmlrep-attrib-value "t" c nil)
@@ -97,7 +88,9 @@ A numeric id or name is required unless the file contains a single worksheet."
 					  (and (stringp fmt) (not (search "h" fmt)) (not (search "s" fmt))
 					       (search "d" fmt) (search "m" fmt) (search "y" fmt)))))
 		   when value
-		   collect (let ((value (xmls:xmlrep-string-child value)))
+		   collect (let ((value (ignore-errors (xmls:xmlrep-string-child value))))
+			     (when (null value) (warn "cell contents missing at ~A ~A [ ~A ~A ]"
+						      (car col-row) (cdr col-row) file entry-name))
 			     (cons col-row
 				   (cond ((equal type "e") (intern value "KEYWORD")) ;;ERROR
 					 ((equal type "str") value) ;; CALCULATED STRING
@@ -105,16 +98,18 @@ A numeric id or name is required unless the file contains a single worksheet."
 					 (date? (excel-date (parse-integer value)))
 					 (t (read-from-string value))))))))))
 
-(defun as-matrix (xlsx)
+(defun as-matrix (xlsx &optional na-string)
   "Creates an array from a list of cells of the form ((:A . 1) . 42)
-Empty columns or rows are ignored (column and row names are returned as additional values)."
+Empty columns or rows are ignored (column and row names are returned as additional values).
+When a value is equal to na-string, nil is returned instead."
   (declare (optimize speed))
   (let* ((refs (mapcar #'first xlsx))
 	 (cols (sort (remove-duplicates (mapcar #'car refs)) #'string< :key (lambda (x) (format nil "~3@A" x))))
 	 (rows (sort (remove-duplicates (mapcar #'cdr refs)) #'<))
 	 (output (make-array (list (length rows) (length cols)) :initial-element nil)))
     (loop for ((col . row) . val) in xlsx
-       do (setf (aref output (the fixnum (position row rows)) (the fixnum (position col cols))) val))
+       do (setf (aref output (the fixnum (position row rows)) (the fixnum (position col cols)) )
+		(if (equal val na-string) nil val)))
     (values output cols rows)))
 
 (defun as-alist (xlsx)
